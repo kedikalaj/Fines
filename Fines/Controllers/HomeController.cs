@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using Fines.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fines.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -15,7 +17,7 @@ namespace Fines.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            return RedirectToAction("Search", "Fines");
         }
 
         public IActionResult Privacy()

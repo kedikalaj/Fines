@@ -35,12 +35,24 @@ namespace Fines.Services.Concrete
             {
                 return new List<Fine>();
             }
-            string noSpacesLicensePlate = licensePlate.Replace(" ", "");
+
+            var platesList = licensePlate.Split(',')
+                                           .Select(p => p.Trim())
+                                           .Where(p => !string.IsNullOrWhiteSpace(p))
+                                           .Select(p => p.Replace(" ", "").ToLower())
+                                           .ToList();
+            if (!platesList.Any())
+            {
+                return new List<Fine>();
+            }
+
+            // Search the database to find fines where the license plate contains any of the input strings
             return await _context.Fine
                 .Include(f => f.Vehicle)
-                .Where(f => f.Vehicle.LicensePlate.Replace(" ", "").ToLower() == noSpacesLicensePlate.ToLower())
+                .Where(f => platesList.Any(plate => f.Vehicle.LicensePlate.Replace(" ", "").ToLower().Contains(plate)))
                 .ToListAsync();
         }
+
 
         /// <summary>
         /// Pays the fine
@@ -56,6 +68,7 @@ namespace Fines.Services.Concrete
             }
 
             fine.IsPaid = true;
+            fine.PaymentDate = DateTime.Now;
             await _context.SaveChangesAsync();
             return true;
         }

@@ -24,33 +24,60 @@ namespace Fines.Controllers
 
         #region Methdos
 
-        // GET: /Vehicle/Search
+        /// <summary>
+        /// The index page
+        /// </summary>
+        /// <returns></returns>
         public IActionResult Search()
         {
             return View(new VehicleFinesViewModel());
         }
-
-        // POST: /Vehicle/SearchFines
+        /// <summary>
+        /// Gets all fines for the license plates
+        /// </summary>
+        /// <param name="licensePlate"></param>
+        /// <param name="page"></param>
+        /// <returns></returns>
         [HttpPost]
-        public async Task<IActionResult> SearchFines(string licensePlate)
+        public async Task<IActionResult> SearchFines(string licensePlate, int page = 1)
         {
-            var fines = await _fineService.GetFinesByLicensePlateAsync(licensePlate);
-            var totalUnpaidFines = fines.Where(f => !f.IsPaid).Sum(f => f.Amount);
+            const int pageSize = 10;
+
+            // Get all fines for the license plate
+            var allFines = await _fineService.GetFinesByLicensePlateAsync(licensePlate);
+            var totalUnpaidFines = allFines.Where(f => !f.IsPaid).Sum(f => f.Amount);
+
+            // Apply pagination
+            var totalFines = allFines.Count;
+            var fines = allFines
+                .OrderBy(f => f.DateOfFine)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
             var viewModel = new VehicleFinesViewModel
             {
                 LicensePlate = licensePlate,
                 Fines = fines,
-                TotalUnpaidFines = totalUnpaidFines
+                TotalUnpaidFines = totalUnpaidFines,
+                CurrentPage = page,
+                TotalPages = (int)Math.Ceiling((double)totalFines / pageSize)
             };
 
             return View("Search", viewModel);
         }
 
-        // POST: /Vehicle/PayFine
+        /// <summary>
+        /// Pays the fine of that license plate
+        /// </summary>
+        /// <param name="fineId"></param>
+        /// <param name="licensePlate"></param>
+        /// <param name="page"></param>
+        /// <returns></returns>
         [HttpPost]
-        public async Task<IActionResult> PayFine(int fineId, string licensePlate)
+        public async Task<IActionResult> PayFine(int fineId, string licensePlate, int page = 1)
         {
+            const int pageSize = 10;
             var result = await _fineService.PayFineAsync(fineId);
             if (!result)
             {
@@ -63,8 +90,10 @@ namespace Fines.Controllers
             var viewModel = new VehicleFinesViewModel
             {
                 LicensePlate = licensePlate,
-                Fines = fines,
-                TotalUnpaidFines = totalUnpaidFines
+                Fines = fines.OrderBy(f => f.DateOfFine).Skip((page - 1) * pageSize).Take(pageSize).ToList(),
+                TotalUnpaidFines = totalUnpaidFines,
+                CurrentPage = page,
+                TotalPages = (int)Math.Ceiling((double)fines.Count / pageSize)
             };
 
             return View("Search", viewModel);
