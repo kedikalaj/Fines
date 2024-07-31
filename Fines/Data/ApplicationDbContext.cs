@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Fines.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fines.Data
@@ -9,5 +10,8 @@ namespace Fines.Data
             : base(options)
         {
         }
+
+        public DbSet<Vehicle> Vehicle { get; set; }
+        public DbSet<Fine> Fine { get; set; }
     }
 }
