@@ -1,4 +1,6 @@
 using Fines.Data;
+using Fines.Services.Abstract;
+using Fines.Services.Concrete;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +16,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddScoped<IFineService, FineService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -32,12 +35,12 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Fines}/{action=Search}/{id?}");
 app.MapRazorPages();
 
 app.Run();
